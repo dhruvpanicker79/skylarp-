@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --nav-h: 4rem;
+    /* Scroll progress through the flight, written by the scene controller and
+       read by CSS so non-3D chrome can respond without a React re-render. */
+    --flight-progress: 0;
+  }
+
+  html {
+    /* Lenis drives scrolling; the native smooth behaviour would fight it. */
+    scroll-behavior: auto;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-navy-900 text-ivory-100 font-sans antialiased;
+    /* `clip`, not `hidden`: `overflow-x: hidden` forces overflow-y to `auto`,
+       which turns <body> into the scroll container and leaves window.scrollY
+       pinned at 0 — breaking the scroll-driven flight. */
+    overflow-x: clip;
+  }
+
+  /* Keyboard users must be able to see where they are, including over the
+     3D scene, so the ring carries its own dark offset. */
+  :focus-visible {
+    outline: 2px solid theme("colors.ember.500");
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: theme("colors.ember.500");
+    color: theme("colors.navy.900");
+  }
+}
+
+@layer components {
+  /* --- Display type ------------------------------------------------------
+     Condensed caps, tightly set. These carry the headline voice; sentence-case
+     body copy underneath provides the contrast that stops the page shouting. */
+  /* Only the hero shouts. */
+  .h-display {
+    @apply font-head text-display uppercase text-ivory-50;
+  }
+
+  .h-title {
+    @apply font-head text-title text-ivory-50;
+  }
+
+  .h-heading {
+    @apply font-head text-heading text-ivory-50;
+  }
+
+  /* A section number / field label. Used for "01", "WINGSPAN", "MICRO CLASS". */
+  .label-meta {
+    @apply font-mono text-meta uppercase text-slate-400;
+  }
+
+  /* Body copy that stays comfortable over imagery. */
+  .prose-skylark {
+    @apply max-w-measure text-body text-ivory-200;
+  }
+
+  /* Editorial window: a content panel placed in the flight environment.
+     Square corners, a solid ground rather than glass, and an orange rule down
+     the leading edge. Opaque on purpose — a translucent card over a dark 3D
+     scene is what makes text muddy and the whole thing read as a template. */
+  /* The panel itself is only spacing and a rule — no box, no card. */
+  .panel {
+    @apply relative;
+    padding-left: clamp(1.25rem, 2.2vw, 2.25rem);
+  }
+
+  /* Legibility backing, applied by the panel layer to EVERY panel rather than
+     only the framed ones: a soft gradient that fades to nothing toward the
+     open side, so the sky and the aircraft stay visible through it while the
+     text keeps its contrast. A hard-edged card is what read as blocks. */
+  .scrim::after {
+    content: "";
+    @apply pointer-events-none absolute inset-y-0 -z-10;
+    left: -12vw;
+    right: -16%;
+    background: linear-gradient(
+      100deg,
+      rgb(8 16 38 / 0.90) 0%,
+      rgb(8 16 38 / 0.78) 42%,
+      rgb(8 16 38 / 0.42) 72%,
+      rgb(8 16 38 / 0) 100%
+    );
+    filter: blur(3px);
+  }
+
+  /* Mirrored for a panel sitting on the right. */
+  .scrim-right::after {
+    left: -16%;
+    right: -12vw;
+    background: linear-gradient(
+      260deg,
+      rgb(8 16 38 / 0.90) 0%,
+      rgb(8 16 38 / 0.78) 42%,
+      rgb(8 16 38 / 0.42) 72%,
+      rgb(8 16 38 / 0) 100%
+    );
+  }
+
+  /* The orange rule marking a panel's leading edge — now the only hard edge. */
+  .panel-rule::before {
+    content: "";
+    @apply absolute left-0 bg-ember-500;
+    top: 0.3rem;
+    bottom: 0.3rem;
+    width: 2px;
+  }
+
+  /* A hairline rule used to separate editorial blocks. */
+  .rule {
+    @apply border-t border-white/[0.12];
+  }
+
+  /* Text link that behaves like a control, not decoration. */
+  .link-action {
+    @apply font-mono text-meta uppercase text-ember-500 transition-colors;
+  }
+
+  .link-action:hover {
+    @apply text-ember-300;
+  }
+}
+
+@layer utilities {
+  /* Marks content that is not yet real. Visible, consistent, never mistaken
+     for finished design — see data/placeholders.ts. */
+  .is-placeholder {
+    @apply font-mono text-caption uppercase tracking-widest text-ember-300/80;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgb(255 122 0 / 0.07) 0 8px,
+      transparent 8px 16px
+    );
+    border: 1px dashed rgb(255 122 0 / 0.35);
+  }
+}
+
+/* Honour the OS setting: the flight sequence is replaced by ordinary
+   sectioned scrolling rather than simply running faster. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
