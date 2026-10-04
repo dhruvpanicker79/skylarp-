@@ -58,15 +58,17 @@ module.exports = {
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       fontSize: {
-        // Archivo is a normal-width grotesk, so display sizes take negative
-        // tracking. Only the hero is set in caps; section headings run in
-        // sentence case, which reads far less shouty.
-        display: ["clamp(2.9rem, 7.2vw, 7rem)", { lineHeight: "0.92", letterSpacing: "-0.035em", fontWeight: "800" }],
-        title: ["clamp(2rem, 4vw, 3.6rem)", { lineHeight: "0.98", letterSpacing: "-0.028em", fontWeight: "700" }],
-        heading: ["clamp(1.35rem, 2.3vw, 1.95rem)", { lineHeight: "1.1", letterSpacing: "-0.018em", fontWeight: "600" }],
-        sub: ["1.0625rem", { lineHeight: "1.5", fontWeight: "500" }],
-        body: ["1.0625rem", { lineHeight: "1.68" }],
-        caption: ["0.9rem", { lineHeight: "1.58" }],
+        // A serif needs different treatment from a grotesk: looser line height
+        // so the ascenders and descenders breathe, and no negative tracking —
+        // Garamond is already tightly fitted and goes muddy when squeezed.
+        display: ["clamp(3rem, 7.5vw, 7.5rem)", { lineHeight: "0.98", letterSpacing: "-0.012em", fontWeight: "600" }],
+        title: ["clamp(2.1rem, 4.2vw, 3.8rem)", { lineHeight: "1.04", letterSpacing: "-0.008em", fontWeight: "600" }],
+        heading: ["clamp(1.45rem, 2.4vw, 2.1rem)", { lineHeight: "1.18", letterSpacing: "0", fontWeight: "600" }],
+        sub: ["1.1875rem", { lineHeight: "1.55", fontWeight: "500" }],
+        body: ["1.1875rem", { lineHeight: "1.68" }],
+        caption: ["1rem", { lineHeight: "1.6" }],
+        // Labels stay mono and small-capped; a serif at this size and tracking
+        // would lose all its detail.
         meta: ["0.6875rem", { lineHeight: "1.4", letterSpacing: "0.15em", fontWeight: "500" }],
       },
       maxWidth: { measure: "62ch" },

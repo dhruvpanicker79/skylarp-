@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import * as THREE from "three";
 import { Environment } from "@react-three/drei";
 import { SUN_DIRECTION } from "./Sky";
-import { GoogleCity } from "./GoogleCity";
 
 /**
  * The world the flight happens in: a hangar, a runway and daylight.
@@ -39,13 +38,6 @@ export function FlightEnvironment({ reduced = false }: { reduced?: boolean }) {
       <Environment files="/hdri/sky-day.hdr" background backgroundBlurriness={0} />
 
       <Lighting reduced={reduced} />
-
-      {/* Real Mumbai, when a Map Tiles API key is configured. Falls back to the
-          plain ground below so the site never depends on Google being up. */}
-      {/* Temporarily off: the tiles library gets 403 from Google even though
-          the same request succeeds from the page via fetch. Re-enable once
-          that is understood — see NOTES-google-tiles.md. */}
-      {false ? <GoogleCity apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} /> : null}
 
       <Ground />
       <Runway />

@@ -8,6 +8,7 @@ import { flightState } from "@/lib/flight-store";
 import type { Tier } from "@/lib/use-capability";
 import { FlightEnvironment } from "./FlightEnvironment";
 import { FlightRig } from "./FlightRig";
+import { GoogleCity } from "./GoogleCity";
 
 /**
  * The WebGL layer of the homepage.
@@ -46,6 +47,9 @@ export function FlightScene({ tier }: { tier: Tier }) {
         }}
       >
         <FlightEnvironment reduced={reduced} />
+        {/* Off: tiles authenticate and download, but are not visible —
+            see NOTES-google-tiles.md. Flip to render to resume. */}
+        {false ? <GoogleCity apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} /> : null}
         <FlightRig
           src={HERO_AIRCRAFT.model}
           placeholder={HERO_AIRCRAFT.modelIsPlaceholder}

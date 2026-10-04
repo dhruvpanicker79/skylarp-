@@ -42,9 +42,11 @@
   /* --- Display type ------------------------------------------------------
      Condensed caps, tightly set. These carry the headline voice; sentence-case
      body copy underneath provides the contrast that stops the page shouting. */
-  /* Only the hero shouts. */
+  /* Set in mixed case, not caps. A serif at display size wants its ascenders
+     and descenders — all-caps Garamond loses the letterforms that make it
+     worth using. */
   .h-display {
-    @apply font-head text-display uppercase text-ivory-50;
+    @apply font-head text-display text-ivory-50;
   }
 
   .h-title {

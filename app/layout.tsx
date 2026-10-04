@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Sora, Roboto_Mono } from "next/font/google";
+import { EB_Garamond, Roboto_Mono } from "next/font/google";
 import "@/styles/globals.css";
 
 /**
@@ -9,25 +9,28 @@ import "@/styles/globals.css";
  * neutral grotesk doing everything, which is what makes a site read as
  * generic.
  *
- * Sora carries the headlines: a geometric sans with slightly squared bowls
- * and open counters, which stays crisp and bright at large sizes rather than
- * turning into a heavy slab. Manrope sets body copy — rounded, generously
- * spaced and very legible over imagery. Roboto Mono carries numbers, units and
- * field labels, where the tabular figures matter more than personality.
+ * EB Garamond carries both headlines and body — an old-style serif with real
+ * calligraphic contrast. It gives the site an editorial, printed-journal
+ * character rather than a software one.
+ *
+ * Roboto Mono stays for numbers, units and field labels. Garamond's old-style
+ * figures sit at different heights by design, which is lovely in a sentence and
+ * wrong in a specification table where digits must align in columns.
  */
 
-const display = Sora({
+const display = EB_Garamond({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
-  weight: ["600", "700", "800"],
+  weight: ["500", "600", "700"],
 });
 
-const text = Manrope({
+const text = EB_Garamond({
   subsets: ["latin"],
   variable: "--font-text",
   display: "swap",
   weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
 });
 
 const mono = Roboto_Mono({
