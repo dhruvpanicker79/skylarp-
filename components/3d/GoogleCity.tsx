@@ -4,7 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { TilesRenderer } from "3d-tiles-renderer";
-import { GoogleCloudAuthPlugin } from "3d-tiles-renderer/plugins";
+import {
+  GLTFExtensionsPlugin,
+  GoogleCloudAuthPlugin,
+  ReorientationPlugin,
+} from "3d-tiles-renderer/plugins";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
 /**
  * Photorealistic Mumbai, from Google's 3D Tiles.
@@ -113,6 +118,33 @@ export function GoogleCity({ apiKey }: { apiKey?: string }) {
       },
     });
 
+    // Put Mumbai at the scene origin, with up along +Y.
+    //
+    // This is the library's own helper and it replaces a hand-rolled transform
+    // that never worked: Google's tiles live in earth-centred coordinates,
+    // millions of metres out, and getting them to the origin by inverting the
+    // east-north-up frame by hand left the geometry somewhere off-screen.
+    // Latitude and longitude are in RADIANS here, not degrees.
+    t.registerPlugin(
+      new ReorientationPlugin({
+        lat: THREE.MathUtils.degToRad(ORIGIN.lat),
+        lon: THREE.MathUtils.degToRad(ORIGIN.lon),
+        height: ORIGIN.height,
+        recenter: true,
+      }),
+    );
+
+    // Decode the tiles.
+    //
+    // Google's photorealistic tiles are Draco-compressed GLB. Without a decoder
+    // the files download perfectly and then parse to nothing — which is exactly
+    // what was happening: 200s on every request, and zero meshes in the scene.
+    // The decoder is served from /public/draco, copied out of three's own
+    // distribution, so there is no CDN dependency at runtime.
+    const draco = new DRACOLoader();
+    draco.setDecoderPath("/draco/");
+    t.registerPlugin(new GLTFExtensionsPlugin({ dracoLoader: draco }));
+
     // Stream less aggressively than the default. The city is background: it
     // must not compete with the aircraft for frame time.
     t.errorTarget = 24;
@@ -123,47 +155,9 @@ export function GoogleCity({ apiKey }: { apiKey?: string }) {
     return t;
   }, [apiKey]);
 
-  // Place the chosen lat/lon at the origin, oriented so up is +Y.
   useEffect(() => {
     if (!tiles || !group.current) return;
 
-    const onLoad = () => {
-      const ellipsoid = tiles.ellipsoid;
-      const position = new THREE.Vector3();
-      const matrix = new THREE.Matrix4();
-
-      ellipsoid.getCartographicToPosition(
-        THREE.MathUtils.degToRad(ORIGIN.lat),
-        THREE.MathUtils.degToRad(ORIGIN.lon),
-        ORIGIN.height,
-        position,
-      );
-      ellipsoid.getEastNorthUpFrame(
-        THREE.MathUtils.degToRad(ORIGIN.lat),
-        THREE.MathUtils.degToRad(ORIGIN.lon),
-        ORIGIN.height,
-        matrix,
-      );
-
-      // Invert the east-north-up frame so the chosen lat/lon lands on the
-      // origin with up pointing along +Y.
-      //
-      // No rescaling: the scene is already in metres — the flight path is about
-      // 450 units long, i.e. 450 m — so the city goes in at 1:1. An earlier
-      // version shrank it, which pushed the geometry hundreds of thousands of
-      // units out and straight through the camera's far plane, so the tiles
-      // loaded and were never visible.
-      tiles.group.matrix.copy(matrix).invert();
-      tiles.group.matrix.decompose(
-        tiles.group.position,
-        tiles.group.quaternion,
-        tiles.group.scale,
-      );
-      tiles.group.updateMatrixWorld(true);
-      void position;
-    };
-
-    tiles.addEventListener("load-tileset", onLoad);
     // Only a failure to load the root tileset is fatal. Individual tiles fail
     // routinely while streaming, and latching on those blanked the city.
     tiles.addEventListener("load-error", (event: unknown) => {
@@ -173,7 +167,6 @@ export function GoogleCity({ apiKey }: { apiKey?: string }) {
     group.current.add(tiles.group);
     const owner = group.current;
     return () => {
-      tiles.removeEventListener("load-tileset", onLoad);
       owner.remove(tiles.group);
       tiles.dispose();
     };
@@ -204,6 +197,17 @@ export function GoogleCity({ apiKey }: { apiKey?: string }) {
         parented: Boolean(tiles.group.parent),
         rootURL: (tiles as unknown as { rootURL?: string }).rootURL ?? null,
         tileChildren: tiles.group.children.length,
+        groupPos: tiles.group.position.toArray().map((n) => Math.round(n)),
+        groupScale: Number(tiles.group.scale.x.toFixed(4)),
+        firstTileAt: (() => {
+          let found: number[] | null = null;
+          tiles.group.traverse((o) => {
+            if (!found && (o as THREE.Mesh).isMesh) {
+              found = o.getWorldPosition(new THREE.Vector3()).toArray().map((n) => Math.round(n));
+            }
+          });
+          return found;
+        })(),
       };
     } catch (err) {
       w.__cityProbe = { state: "threw", message: String(err).slice(0, 300), frames: frames.current };

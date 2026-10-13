@@ -113,3 +113,33 @@ Next steps:
 4. Consider the `GlobeControls` / `ReorientationPlugin` helpers, which exist
    precisely to put a lat/lon at the origin â€” doing it by hand may be
    unnecessary.
+
+## Update 3 — isolated to the transform, authentication fully working
+
+Authentication is DONE. Tiles download and return 200 (verified: 36 requests all
+carrying `key`). Draco decoding is wired from /public/draco, copied out of
+three's own distribution, so there is no CDN dependency.
+
+**What is left is placement, and it is now isolated.**
+
+Registering `ReorientationPlugin` stops the renderer requesting child tiles
+entirely: Google requests drop from 36 to 1 (the root tileset only). Confirmed
+by isolation — disabling `GLTFExtensionsPlugin` changed nothing, disabling
+`ReorientationPlugin` restores the requests.
+
+So there are two states, and neither renders:
+
+| Setup | Child tile requests | Placement |
+|---|---|---|
+| No ReorientationPlugin | 36, all 200 | tiles load, never positioned, never visible |
+| With ReorientationPlugin | 1 (root only) | nothing to position |
+
+The likely cause is that the traversal culls against the camera in the
+tileset's own earth-centred frame while the plugin has moved `tiles.group`, so
+the camera appears to sit at the centre of the planet and every tile is culled.
+
+**Stop guessing at this.** The next step is to open the library's own Google
+Photorealistic Tiles example for v0.5.3 and copy its setup exactly — camera
+registration order, controls, plugin order and update loop — rather than
+reasoning about the transform from first principles, which is what the last
+several attempts did. The repository has runnable examples under `example/`.
